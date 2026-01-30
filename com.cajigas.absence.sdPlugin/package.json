@@ -1,0 +1,7 @@
+{
+  "name": "com.cajigas.absence.plugin",
+  "version": "1.0.0",
+  "description": "Absence.io Plugin for StreamDeck - Browser-based HTML plugin",
+  "author": "cajigas.es",
+  "license": "MIT"
+}

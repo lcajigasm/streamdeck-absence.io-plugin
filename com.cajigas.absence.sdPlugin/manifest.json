@@ -1,0 +1,107 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "UUID": "com.cajigas.absence",
+  "Name": "Absence.io",
+  "Version": "1.0.0.0",
+  "Author": "cajigas.es",
+  "Icon": "images/pluginIcon",
+  "Category": "Absence.io",
+  "CategoryIcon": "images/categoryIcon",
+  "CodePath": "index.html",
+  "Description": "Plugin to manage your absence.io time tracking from your StreamDeck",
+  "URL": "https://cajigas.es",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.9"
+  },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.15"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Actions": [
+    {
+      "Name": "Test Connection",
+      "UUID": "com.cajigas.absence.test",
+      "Icon": "images/status",
+      "Tooltip": "Test absence.io connection",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "images/status"
+        }
+      ],
+      "PropertyInspectorPath": "propertyInspector.html"
+    },
+    {
+      "Name": "Clock In",
+      "UUID": "com.cajigas.absence.clockin",
+      "Icon": "images/clockin",
+      "Tooltip": "Start work time tracking",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "images/clockin"
+        }
+      ],
+      "PropertyInspectorPath": "propertyInspector.html"
+    },
+    {
+      "Name": "Clock Out",
+      "UUID": "com.cajigas.absence.clockout",
+      "Icon": "images/clockout",
+      "Tooltip": "End work time tracking",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "images/clockout"
+        }
+      ],
+      "PropertyInspectorPath": "propertyInspector.html"
+    },
+    {
+      "Name": "Pause",
+      "UUID": "com.cajigas.absence.pause",
+      "Icon": "images/pause",
+      "Tooltip": "Pause work time tracking",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "images/pause"
+        },
+        {
+          "Image": "images/resume"
+        }
+      ],
+      "PropertyInspectorPath": "propertyInspector.html"
+    },
+    {
+      "Name": "Status",
+      "UUID": "com.cajigas.absence.status",
+      "Icon": "images/status",
+      "Tooltip": "View current time tracking status",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "images/status"
+        }
+      ],
+      "PropertyInspectorPath": "propertyInspector.html"
+    }
+  ]
+}

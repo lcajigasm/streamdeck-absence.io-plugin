@@ -1,0 +1,55 @@
+{
+  "Name": "Absence.io",
+  "Description": "Plugin para gestionar el fichaje en absence.io desde tu StreamDeck",
+  "Category": "Absence.io",
+  "com.cajigas.absence.clockin": {
+    "Name": "Fichar Entrada",
+    "Tooltip": "Iniciar fichaje de trabajo"
+  },
+  "com.cajigas.absence.clockout": {
+    "Name": "Fichar Salida",
+    "Tooltip": "Finalizar fichaje de trabajo"
+  },
+  "com.cajigas.absence.pause": {
+    "Name": "Pausar",
+    "Tooltip": "Pausar fichaje de trabajo"
+  },
+  "com.cajigas.absence.status": {
+    "Name": "Estado",
+    "Tooltip": "Ver estado actual del fichaje"
+  },
+  "Localization": {
+    "PropertyInspector.Title": "Configuración Absence.io",
+    "PropertyInspector.UserId": "User ID",
+    "PropertyInspector.UserIdPlaceholder": "Tu User ID de absence.io",
+    "PropertyInspector.ApiKey": "API Key",
+    "PropertyInspector.ApiKeyPlaceholder": "Tu API Key de absence.io",
+    "PropertyInspector.Timezone": "Zona Horaria",
+    "PropertyInspector.WorkType": "Tipo de Trabajo",
+    "PropertyInspector.WorkTypes.work": "Trabajo",
+    "PropertyInspector.WorkTypes.homeoffice": "Teletrabajo",
+    "PropertyInspector.WorkTypes.overtime": "Horas extra",
+    "PropertyInspector.InfoTitle": "¿Dónde consigo mis credenciales?",
+    "PropertyInspector.InfoStep1": "1. Ve a",
+    "PropertyInspector.InfoStep1b": "e inicia sesión",
+    "PropertyInspector.InfoStep2": "2. Haz clic en tu perfil (arriba a la derecha)",
+    "PropertyInspector.InfoStep3": "3. Ve a la pestaña \"Integraciones\"",
+    "PropertyInspector.InfoStep4": "4. Haz clic en \"Generar API Key\"",
+    "PropertyInspector.InfoStep5": "5. Copia el Key Identifier en el campo \"User ID\" de arriba",
+    "PropertyInspector.InfoStep6": "6. Copia la API Key en el campo \"API Key\" de arriba",
+    "PropertyInspector.InfoNote": "Importante:",
+    "PropertyInspector.InfoNoteText": "Guarda estas credenciales de forma segura. La API Key solo se muestra una vez.",
+    "Messages.ConfigError": "Error: Configuración de API no válida. Por favor, configura userId y apiKey.",
+    "Messages.ClockedIn": "Fichado",
+    "Messages.ClockedOut": "Fin fichaje",
+    "Messages.Paused": "Pausado",
+    "Messages.NoActiveTimespan": "No hay fichaje activo para pausar",
+    "Messages.NotClockedIn": "Sin fichar",
+    "Messages.ActiveSince": "Fichaje activo desde hace",
+    "Messages.NoActiveTimespanStatus": "No hay fichaje activo",
+    "Messages.ErrorClockIn": "Error al fichar entrada",
+    "Messages.ErrorClockOut": "Error al fichar salida",
+    "Messages.ErrorPause": "Error al pausar",
+    "Messages.ErrorStatus": "Error al obtener estado"
+  }
+}

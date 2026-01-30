@@ -1,0 +1,25 @@
+{
+  "name": "com.cajigas.absence",
+  "version": "1.0.0",
+  "description": "StreamDeck plugin for absence.io time tracking management",
+  "main": "src/plugin.js",
+  "scripts": {
+    "build": "node build.js",
+    "icons": "node generate-icons.js",
+    "validate": "streamdeck validate com.cajigas.absence.sdPlugin",
+    "pack": "node pack-plugin.js",
+    "release": "npm run build && npm run pack"
+  },
+  "keywords": [
+    "streamdeck",
+    "absence.io",
+    "timetracking"
+  ],
+  "author": "cajigas.es",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@elgato/cli": "^1.7.0",
+    "sharp": "^0.34.5"
+  }
+}

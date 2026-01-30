@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="clockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E0E7FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded rectangle background -->
+  <rect width="256" height="256" rx="56" fill="url(#bgGradient)"/>
+  
+  <!-- Clock circle -->
+  <circle cx="128" cy="128" r="80" fill="url(#clockGradient)" opacity="0.95"/>
+  
+  <!-- Clock border -->
+  <circle cx="128" cy="128" r="80" fill="none" stroke="#4F46E5" stroke-width="6" opacity="0.3"/>
+  
+  <!-- Hour markers -->
+  <circle cx="128" cy="68" r="4" fill="#4F46E5"/>
+  <circle cx="128" cy="188" r="4" fill="#4F46E5"/>
+  <circle cx="68" cy="128" r="4" fill="#4F46E5"/>
+  <circle cx="188" cy="128" r="4" fill="#4F46E5"/>
+  
+  <!-- Clock hands -->
+  <!-- Hour hand -->
+  <line x1="128" y1="128" x2="128" y2="95" stroke="#4F46E5" stroke-width="8" stroke-linecap="round"/>
+  <!-- Minute hand -->
+  <line x1="128" y1="128" x2="160" y2="128" stroke="#7C3AED" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Center dot -->
+  <circle cx="128" cy="128" r="8" fill="#4F46E5"/>
+  
+  <!-- Play icon overlay (representing tracking) -->
+  <path d="M 105 110 L 105 146 L 135 128 Z" fill="#10B981" opacity="0.9"/>
+</svg>

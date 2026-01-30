@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Absence.io Plugin v2</title>
+</head>
+<body>
+    <script>
+        console.log('═══════════════════════════════════════════════════');
+        console.log('  ABSENCE.IO PLUGIN v2.0 - STANDALONE');
+        console.log('  No external dependencies');
+        console.log('═══════════════════════════════════════════════════');
+        
+        // ============================================================
+        // ABSENCE.IO API CLIENT (using fetch + Web Crypto API)
+        // ============================================================
+        
+        class AbsenceAPI {
+            constructor(userId, apiKey, timezone = 'Europe/Madrid') {
+                this.userId = userId;
+                this.apiKey = apiKey;
+                this.timezone = timezone;
+                this.baseUrl = 'https://app.absence.io/api/v2';
+                console.log(`[AbsenceAPI] Initialized for user: ${userId}`);
+            }
+            
+            getTimezoneOffset() {
+                const date = new Date();
+                const offset = -date.getTimezoneOffset();
+                const hours = Math.floor(Math.abs(offset) / 60);
+                const minutes = Math.abs(offset) % 60;
+                const sign = offset >= 0 ? '+' : '-';
+                return `${sign}${String(hours).padStart(2, '0')}${String(minutes).padStart(2, '0')}`;
+            }
+            
+            getCurrentTime() {
+                const date = new Date();
+                const dt = date.toISOString().split('.')[0];
+                const ms = String(date.getMilliseconds()).padStart(3, '0');
+                return `${dt}.${ms}Z`;
+            }
+            
+            async generateHawkAuth(method, url, payload = null) {
+                const timestamp = Math.floor(Date.now() / 1000);
+                const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(6))));
+                const urlObj = new URL(url);
+                
+                let hash = '';
+                if (payload) {
+                    const payloadString = `hawk.1.payload\napplication/json\n${JSON.stringify(payload)}\n`;
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(payloadString);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                    hash = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+                }
+                
+                const normalized = `hawk.1.header\n${timestamp}\n${nonce}\n${method}\n${urlObj.pathname}\n${urlObj.hostname}\n443\n${hash}\n\n`;
+                const encoder = new TextEncoder();
+                
+                const keyData = encoder.encode(this.apiKey);
+                const cryptoKey = await crypto.subtle.importKey(
+                    'raw',
+                    keyData,
+                    { name: 'HMAC', hash: 'SHA-256' },
+                    false,
+                    ['sign']
+                );
+                
+                const normalizedData = encoder.encode(normalized);
+                const macBuffer = await crypto.subtle.sign('HMAC', cryptoKey, normalizedData);
+                const mac = btoa(String.fromCharCode(...new Uint8Array(macBuffer)));
+                
+                let authHeader = `Hawk id="${this.userId}", ts="${timestamp}", nonce="${nonce}", mac="${mac}"`;
+                if (hash) {
+                    authHeader += `, hash="${hash}"`;
+                }
+                
+                return authHeader;
+            }
+            
+            async makeRequest(method, endpoint, payload = null) {
+                try {
+                    const url = `${this.baseUrl}${endpoint}`;
+                    const body = payload ? JSON.stringify(payload) : null;
+                    
+                    console.log(`[API] ${method} ${endpoint}`);
+                    
+                    const hawkAuth = await this.generateHawkAuth(method, url, payload);
+                    
+                    const options = {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': hawkAuth
+                        }
+                    };
+                    
+                    if (body) {
+                        options.body = body;
+                    }
+                    
+                    const response = await fetch(url, options);
+                    console.log(`[API] Response: ${response.status}`);
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        return { success: true, data: data };
+                    } else {
+                        return { success: false, error: data.message || `HTTP ${response.status}` };
+                    }
+                    
+                } catch (error) {
+                    console.error(`[API] Error: ${error.message}`);
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            async clockIn(type = 'work') {
+                const payload = {
+                    userId: this.userId,
+                    start: this.getCurrentTime(),
+                    end: null,
+                    timezoneName: this.timezone,
+                    timezone: this.getTimezoneOffset(),
+                    type: type
+                };
+                
+                const result = await this.makeRequest('POST', '/timespans/create', payload);
+                return result.success ? { success: true, timespan: result.data } : result;
+            }
+            
+            async getActiveTimespan() {
+                const payload = {
+                    filter: {
+                        userId: this.userId,
+                        end: { '$eq': null }
+                    },
+                    limit: 10,
+                    skip: 0
+                };
+                
+                const result = await this.makeRequest('POST', '/timespans', payload);
+                
+                if (result.success && result.data.data && result.data.data.length > 0) {
+                    return result.data.data[0];
+                }
+                
+                return null;
+            }
+            
+            async clockOut() {
+                const activeTimespan = await this.getActiveTimespan();
+                
+                if (!activeTimespan) {
+                    return { success: false, error: 'No hay fichaje activo' };
+                }
+                
+                const payload = {
+                    start: activeTimespan.start,
+                    end: this.getCurrentTime(),
+                    timezoneName: this.timezone,
+                    timezone: this.getTimezoneOffset()
+                };
+                
+                const result = await this.makeRequest('PUT', `/timespans/${activeTimespan._id}`, payload);
+                
+                if (result.success) {
+                    const startTime = new Date(activeTimespan.start);
+                    const endTime = new Date(payload.end);
+                    const duration = Math.floor((endTime - startTime) / 1000);
+                    
+                    return { success: true, timespan: result.data, duration: duration };
+                }
+                
+                return result;
+            }
+            
+            async getStatus() {
+                const activeTimespan = await this.getActiveTimespan();
+                
+                if (activeTimespan) {
+                    return {
+                        isActive: true,
+                        startTime: activeTimespan.start,
+                        type: activeTimespan.type
+                    };
+                }
+                
+                return { isActive: false };
+            }
+            
+            async getTodayTimespans() {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const payload = {
+                    filter: {
+                        userId: this.userId,
+                        start: {
+                            '$gte': today.toISOString(),
+                            '$lt': tomorrow.toISOString()
+                        }
+                    },
+                    limit: 50,
+                    skip: 0
+                };
+                
+                const result = await this.makeRequest('POST', '/timespans', payload);
+                
+                if (result.success) {
+                    return { success: true, timespans: result.data.data || [] };
+                }
+                
+                return result;
+            }
+        }
+        
+        // ============================================================
+        // UTILITY FUNCTIONS
+        // ============================================================
+        
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+        
+        function calculateDuration(startTime) {
+            const start = new Date(startTime);
+            const now = new Date();
+            return Math.floor((now - start) / 1000);
+        }
+        
+        // ============================================================
+        // STREAM DECK CONNECTION
+        // ============================================================
+        
+        let websocket = null;
+        let pluginUUID = null;
+        let globalSettings = {};
+        let contextSettings = new Map();
+        
+        function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, inInfo) {
+            console.log('[Plugin] ════════════════════════════════════════');
+            console.log('[Plugin] CONNECTING TO STREAMDECK');
+            console.log('[Plugin] Port:', inPort);
+            console.log('[Plugin] UUID:', inPluginUUID);
+            console.log('[Plugin] ════════════════════════════════════════');
+            
+            pluginUUID = inPluginUUID;
+            
+            websocket = new WebSocket(`ws://127.0.0.1:${inPort}`);
+            
+            websocket.onopen = () => {
+                console.log('[Plugin] ✅ WebSocket CONNECTED');
+                websocket.send(JSON.stringify({
+                    event: inRegisterEvent,
+                    uuid: inPluginUUID
+                }));
+                console.log('[Plugin] ✅ Plugin registered');
+                
+                websocket.send(JSON.stringify({
+                    event: 'getGlobalSettings',
+                    context: inPluginUUID
+                }));
+            };
+            
+            websocket.onmessage = async (evt) => {
+                try {
+                    const jsonObj = JSON.parse(evt.data);
+                    const event = jsonObj.event;
+                    const action = jsonObj.action;
+                    const context = jsonObj.context;
+                    const payload = jsonObj.payload || {};
+                    
+                    console.log(`[Plugin] Event: ${event} | Action: ${action}`);
+                    
+                    if (event === 'willAppear' || event === 'didReceiveSettings') {
+                        if (payload.settings) {
+                            contextSettings.set(context, payload.settings);
+                        }
+                    }
+                    
+                    if (event === 'didReceiveGlobalSettings') {
+                        if (payload.settings) {
+                            globalSettings = payload.settings;
+                            console.log('[Plugin] 🌍 Global settings updated');
+                        }
+                    }
+                    
+                    if (event === 'keyDown') {
+                        await handleKeyDown(action, context, payload);
+                    }
+                    
+                } catch (error) {
+                    console.error('[Plugin] ❌ Error:', error);
+                }
+            };
+            
+            websocket.onerror = (error) => {
+                console.error('[Plugin] ❌ WebSocket ERROR:', error);
+            };
+            
+            websocket.onclose = () => {
+                console.log('[Plugin] ⚠️ WebSocket CLOSED');
+            };
+        }
+        
+        // ============================================================
+        // EVENT HANDLERS
+        // ============================================================
+        
+        function getSettings(context) {
+            let settings = contextSettings.get(context) || {};
+            if (!settings.userId || !settings.apiKey) {
+                settings = globalSettings;
+            }
+            return settings;
+        }
+        
+        async function handleKeyDown(action, context, payload) {
+            console.log(`[Plugin] 🔘 Button pressed: ${action}`);
+            
+            const settings = getSettings(context);
+            console.log('[Plugin] Settings:', { ...settings, apiKey: settings.apiKey ? '***' : 'none' });
+            
+            if (!settings.userId || !settings.apiKey) {
+                console.error('[Plugin] ❌ No credentials configured');
+                setTitle(context, 'Config!');
+                showAlert(context);
+                setTimeout(() => setTitle(context, ''), 2000);
+                return;
+            }
+            
+            try {
+                switch(action) {
+                    case 'com.cajigas.absence.test':
+                        await handleTestConnection(context, settings);
+                        break;
+                    case 'com.cajigas.absence.clockin':
+                        await handleClockIn(context, settings);
+                        break;
+                    case 'com.cajigas.absence.clockout':
+                        await handleClockOut(context, settings);
+                        break;
+                    case 'com.cajigas.absence.status':
+                        await handleStatus(context, settings);
+                        break;
+                    case 'com.cajigas.absence.pause':
+                        await handlePause(context, settings);
+                        break;
+                    default:
+                        console.error('[Plugin] Unknown action:', action);
+                }
+            } catch (error) {
+                console.error('[Plugin] ❌ Error:', error);
+                setTitle(context, 'Error');
+                showAlert(context);
+                setTimeout(() => setTitle(context, ''), 2000);
+            }
+        }
+        
+        async function handleTestConnection(context, settings) {
+            console.log('[Plugin] 🧪 TEST CONNECTION');
+            setTitle(context, '⏳');
+            
+            const api = new AbsenceAPI(settings.userId, settings.apiKey, settings.timezone || 'Europe/Madrid');
+            const result = await api.getTodayTimespans();
+            
+            if (result.success) {
+                const count = result.timespans.length;
+                console.log(`[Plugin] ✅ Success: ${count} entries found`);
+                setTitle(context, `✓ ${count}`);
+                showOk(context);
+                setTimeout(() => setTitle(context, ''), 5000);
+            } else {
+                console.error(`[Plugin] ❌ Failed: ${result.error}`);
+                setTitle(context, '✗ Fail');
+                showAlert(context);
+                setTimeout(() => setTitle(context, ''), 3000);
+            }
+        }
+        
+        async function handleClockIn(context, settings) {
+            console.log('[Plugin] ⏰ CLOCK IN');
+            setTitle(context, '⏳');
+            
+            const api = new AbsenceAPI(settings.userId, settings.apiKey, settings.timezone || 'Europe/Madrid');
+            const result = await api.clockIn(settings.workType || 'work');
+            
+            if (result.success) {
+                console.log('[Plugin] ✅ Clock in successful');
+                setTitle(context, '✓ In');
+                showOk(context);
+                setTimeout(() => setTitle(context, ''), 3000);
+            } else {
+                console.error(`[Plugin] ❌ Failed: ${result.error}`);
+                setTitle(context, '✗ Fail');
+                showAlert(context);
+                setTimeout(() => setTitle(context, ''), 3000);
+            }
+        }
+        
+        async function handleClockOut(context, settings) {
+            console.log('[Plugin] ⏰ CLOCK OUT');
+            setTitle(context, '⏳');
+            
+            const api = new AbsenceAPI(settings.userId, settings.apiKey, settings.timezone || 'Europe/Madrid');
+            const result = await api.clockOut();
+            
+            if (result.success) {
+                console.log('[Plugin] ✅ Clock out successful');
+                setTitle(context, '✓ Out');
+                showOk(context);
+                
+                if (result.duration) {
+                    setTimeout(() => {
+                        const formatted = formatDuration(result.duration);
+                        setTitle(context, `⏱ ${formatted}`);
+                    }, 1500);
+                    setTimeout(() => setTitle(context, ''), 5000);
+                } else {
+                    setTimeout(() => setTitle(context, ''), 3000);
+                }
+            } else {
+                console.error(`[Plugin] ❌ Failed: ${result.error}`);
+                setTitle(context, '✗ Fail');
+                showAlert(context);
+                setTimeout(() => setTitle(context, ''), 3000);
+            }
+        }
+        
+        async function handleStatus(context, settings) {
+            console.log('[Plugin] 📊 STATUS');
+            setTitle(context, '⏳');
+            
+            const api = new AbsenceAPI(settings.userId, settings.apiKey, settings.timezone || 'Europe/Madrid');
+            const result = await api.getStatus();
+            
+            if (result.isActive) {
+                const duration = calculateDuration(result.startTime);
+                const formatted = formatDuration(duration);
+                console.log(`[Plugin] ✅ Active: ${formatted}`);
+                setTitle(context, `⏱ ${formatted}`);
+                showOk(context);
+                setTimeout(() => setTitle(context, ''), 5000);
+            } else {
+                console.log('[Plugin] ℹ️ Not clocked in');
+                setTitle(context, 'Not In');
+                setTimeout(() => setTitle(context, ''), 3000);
+            }
+        }
+        
+        async function handlePause(context, settings) {
+            console.log('[Plugin] ⏸ PAUSE');
+            setTitle(context, '⏳');
+            
+            const api = new AbsenceAPI(settings.userId, settings.apiKey, settings.timezone || 'Europe/Madrid');
+            const result = await api.clockOut();
+            
+            if (result.success) {
+                console.log('[Plugin] ✅ Paused');
+                setTitle(context, '⏸ Pause');
+                showOk(context);
+                setTimeout(() => setTitle(context, ''), 3000);
+            } else {
+                console.error(`[Plugin] ❌ Failed: ${result.error}`);
+                setTitle(context, '✗ Fail');
+                showAlert(context);
+                setTimeout(() => setTitle(context, ''), 3000);
+            }
+        }
+        
+        // ============================================================
+        // STREAMDECK API FUNCTIONS
+        // ============================================================
+        
+        function setTitle(context, title) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    event: 'setTitle',
+                    context: context,
+                    payload: { title: title, target: 0 }
+                }));
+            }
+        }
+        
+        function showOk(context) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    event: 'showOk',
+                    context: context
+                }));
+            }
+        }
+        
+        function showAlert(context) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    event: 'showAlert',
+                    context: context
+                }));
+            }
+        }
+        
+        console.log('[Plugin] ✅ Plugin loaded and ready');
+        console.log('[Plugin] Waiting for StreamDeck connection...');
+    </script>
+</body>
+</html>

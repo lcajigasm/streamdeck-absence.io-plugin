@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="clockoutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DC2626;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="144" height="144" rx="20" fill="url(#clockoutGradient)"/>
+  
+  <!-- Clock circle -->
+  <circle cx="72" cy="72" r="45" fill="#FFFFFF" opacity="0.2"/>
+  <circle cx="72" cy="72" r="40" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  
+  <!-- Clock hands pointing to end time -->
+  <line x1="72" y1="72" x2="72" y2="102" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <line x1="72" y1="72" x2="54" y2="72" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Arrow pointing out (exiting) -->
+  <path d="M 85 55 L 100 72 L 85 89" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="100" y1="72" x2="60" y2="72" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+</svg>

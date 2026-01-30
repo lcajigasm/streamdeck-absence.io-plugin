@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="resumeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="144" height="144" rx="20" fill="url(#resumeGradient)"/>
+  
+  <!-- Clock circle with play symbol -->
+  <circle cx="72" cy="72" r="45" fill="#FFFFFF" opacity="0.2"/>
+  <circle cx="72" cy="72" r="40" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  
+  <!-- Play triangle -->
+  <path d="M 62 52 L 62 92 L 94 72 Z" fill="#FFFFFF"/>
+  
+  <!-- Small clock indication -->
+  <line x1="72" y1="30" x2="72" y2="37" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <line x1="107" y1="72" x2="100" y2="72" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+</svg>

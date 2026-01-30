@@ -1,0 +1,55 @@
+{
+  "Name": "Absence.io",
+  "Description": "Plugin to manage your absence.io time tracking from your StreamDeck",
+  "Category": "Absence.io",
+  "com.cajigas.absence.clockin": {
+    "Name": "Clock In",
+    "Tooltip": "Start work time tracking"
+  },
+  "com.cajigas.absence.clockout": {
+    "Name": "Clock Out",
+    "Tooltip": "End work time tracking"
+  },
+  "com.cajigas.absence.pause": {
+    "Name": "Pause",
+    "Tooltip": "Pause work time tracking"
+  },
+  "com.cajigas.absence.status": {
+    "Name": "Status",
+    "Tooltip": "View current time tracking status"
+  },
+  "Localization": {
+    "PropertyInspector.Title": "Absence.io Configuration",
+    "PropertyInspector.UserId": "User ID",
+    "PropertyInspector.UserIdPlaceholder": "Your absence.io User ID",
+    "PropertyInspector.ApiKey": "API Key",
+    "PropertyInspector.ApiKeyPlaceholder": "Your absence.io API Key",
+    "PropertyInspector.Timezone": "Timezone",
+    "PropertyInspector.WorkType": "Work Type",
+    "PropertyInspector.WorkTypes.work": "Work",
+    "PropertyInspector.WorkTypes.homeoffice": "Home Office",
+    "PropertyInspector.WorkTypes.overtime": "Overtime",
+    "PropertyInspector.InfoTitle": "How to get your credentials?",
+    "PropertyInspector.InfoStep1": "1. Go to",
+    "PropertyInspector.InfoStep1b": "and log in",
+    "PropertyInspector.InfoStep2": "2. Click on your profile (top right)",
+    "PropertyInspector.InfoStep3": "3. Go to the \"Integrations\" tab",
+    "PropertyInspector.InfoStep4": "4. Click \"Generate API Key\"",
+    "PropertyInspector.InfoStep5": "5. Copy the Key Identifier to the \"User ID\" field above",
+    "PropertyInspector.InfoStep6": "6. Copy the API Key to the \"API Key\" field above",
+    "PropertyInspector.InfoNote": "Important:",
+    "PropertyInspector.InfoNoteText": "Save these credentials securely. The API Key is only shown once.",
+    "Messages.ConfigError": "Error: Invalid API configuration. Please set userId and apiKey.",
+    "Messages.ClockedIn": "Clocked In",
+    "Messages.ClockedOut": "Clocked Out",
+    "Messages.Paused": "Paused",
+    "Messages.NoActiveTimespan": "No active timespan to pause",
+    "Messages.NotClockedIn": "Not clocked in",
+    "Messages.ActiveSince": "Active since",
+    "Messages.NoActiveTimespanStatus": "No active timespan",
+    "Messages.ErrorClockIn": "Error clocking in",
+    "Messages.ErrorClockOut": "Error clocking out",
+    "Messages.ErrorPause": "Error pausing",
+    "Messages.ErrorStatus": "Error getting status"
+  }
+}

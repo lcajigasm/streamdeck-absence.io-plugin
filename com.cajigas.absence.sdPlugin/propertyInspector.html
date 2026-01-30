@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absence.io Configuration</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            color: #ddd;
+            background-color: #2d2d2d;
+        }
+        
+        .sdpi-wrapper {
+            padding: 0;
+        }
+        
+        .sdpi-item {
+            margin-bottom: 15px;
+        }
+        
+        .sdpi-item-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #9a9a9a;
+            font-size: 12px;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            background-color: #3a3a3a;
+            color: #ddd;
+            font-size: 13px;
+            outline: none;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        select:focus {
+            border-color: #0e6fd8;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-test {
+            background-color: #2d5a8f;
+            color: white;
+        }
+        
+        .btn-test:hover {
+            background-color: #3a7bc8;
+        }
+        
+        .btn-save {
+            background-color: #2d8f40;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background-color: #3ab852;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .status-success {
+            background-color: #2d4a2d;
+            color: #90ee90;
+            border: 1px solid #3a6e3a;
+        }
+        
+        .status-error {
+            background-color: #4a2d2d;
+            color: #ff8080;
+            border: 1px solid #6e3a3a;
+        }
+        
+        .status-info {
+            background-color: #2d3e4a;
+            color: #80c8ff;
+            border: 1px solid: #3a5a6e;
+        }
+        
+        .info-box {
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #3a3a3a;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #9a9a9a;
+            line-height: 1.5;
+        }
+        
+        .info-box a {
+            color: #0e6fd8;
+            text-decoration: none;
+        }
+        
+        .info-box a:hover {
+            text-decoration: underline;
+        }
+        
+        .info-box strong {
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="sdpi-wrapper">
+        <div class="sdpi-item">
+            <label class="sdpi-item-label" for="userId">User ID</label>
+            <input type="text" id="userId" placeholder="Enter your absence.io User ID" />
+        </div>
+        
+        <div class="sdpi-item">
+            <label class="sdpi-item-label" for="apiKey">API Key</label>
+            <input type="password" id="apiKey" placeholder="Enter your absence.io API Key" />
+        </div>
+        
+        <div class="sdpi-item">
+            <label class="sdpi-item-label" for="timezone">Timezone</label>
+            <select id="timezone">
+                <option value="Europe/Madrid">Europe/Madrid (CET)</option>
+                <option value="Europe/London">Europe/London (GMT)</option>
+                <option value="Europe/Paris">Europe/Paris (CET)</option>
+                <option value="America/New_York">America/New York (EST)</option>
+                <option value="America/Los_Angeles">America/Los Angeles (PST)</option>
+                <option value="America/Chicago">America/Chicago (CST)</option>
+                <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                <option value="Australia/Sydney">Australia/Sydney (AEDT)</option>
+            </select>
+        </div>
+        
+        <div class="sdpi-item">
+            <label class="sdpi-item-label" for="workType">Work Type</label>
+            <select id="workType">
+                <option value="work">Work</option>
+                <option value="homeoffice">Home Office</option>
+                <option value="overtime">Overtime</option>
+            </select>
+        </div>
+        
+        <div class="button-group">
+            <button id="testBtn" class="btn-test">Test Credentials</button>
+            <button id="saveBtn" class="btn-save">Save Settings</button>
+        </div>
+        
+        <div id="statusMessage" class="status-message"></div>
+        
+        <div class="info-box">
+            <strong>How to get credentials:</strong><br>
+            1. Go to <a href="https://app.absence.io" target="_blank">absence.io</a><br>
+            2. Profile → Integrations tab<br>
+            3. Generate API Key<br>
+            4. Copy Key Identifier to User ID<br>
+            5. Copy API Key to API Key field<br>
+            <br>
+            <strong>Note:</strong> API Key is shown only once. Save it securely.
+        </div>
+    </div>
+    
+    <script>
+        let websocket = null;
+        let uuid = null;
+        let actionInfo = {};
+        let globalSettings = {};
+        
+        function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, inActionInfo) {
+            uuid = inUUID;
+            actionInfo = JSON.parse(inActionInfo);
+            
+            console.log('[PI] Connecting to StreamDeck...');
+            
+            websocket = new WebSocket(`ws://127.0.0.1:${inPort}`);
+            
+            websocket.onopen = () => {
+                const json = {
+                    event: inRegisterEvent,
+                    uuid: inUUID
+                };
+                websocket.send(JSON.stringify(json));
+                
+                console.log('[PI] Connected to StreamDeck');
+                
+                // Request current settings
+                requestSettings();
+                requestGlobalSettings();
+            };
+            
+            websocket.onmessage = (evt) => {
+                const jsonObj = JSON.parse(evt.data);
+                
+                console.log('[PI] Message received:', jsonObj.event);
+                
+                if (jsonObj.event === 'didReceiveSettings') {
+                    const settings = jsonObj.payload.settings;
+                    console.log('[PI] Settings received:', { ...settings, apiKey: settings.apiKey ? '***' : 'none' });
+                    updateUI(settings);
+                } else if (jsonObj.event === 'didReceiveGlobalSettings') {
+                    globalSettings = jsonObj.payload.settings || {};
+                    console.log('[PI] Global settings received:', { ...globalSettings, apiKey: globalSettings.apiKey ? '***' : 'none' });
+                    // Use global settings if local settings are empty
+                    if (!document.getElementById('userId').value && globalSettings.userId) {
+                        updateUI(globalSettings);
+                    }
+                } else if (jsonObj.event === 'sendToPropertyInspector') {
+                    handlePluginMessage(jsonObj.payload);
+                }
+            };
+            
+            function handlePluginMessage(payload) {
+                console.log('[PI] ========================================');
+                console.log('[PI] MESSAGE FROM PLUGIN');
+                console.log('[PI] Payload:', payload);
+                console.log('[PI] ========================================');
+                
+                if (payload.action === 'testResult') {
+                    document.getElementById('testBtn').disabled = false;
+                    document.getElementById('testBtn').textContent = 'Test Credentials';
+                    
+                    if (payload.success) {
+                        console.log('[PI] ✅ Test successful');
+                        showStatus('✅ ' + payload.message, 'success');
+                        alert('✅ SUCCESS\n\n' + payload.message + '\n\nYou can now click "Save Settings".');
+                    } else {
+                        console.error('[PI] ❌ Test failed');
+                        showStatus('❌ ' + payload.message, 'error');
+                        alert('❌ TEST FAILED\n\n' + payload.message + '\n\nPlease check your credentials.');
+                    }
+                }
+            }
+            
+            websocket.onerror = (error) => {
+                console.error('[PI] WebSocket error:', error);
+            };
+        }
+        
+        function requestSettings() {
+            if (websocket && websocket.readyState === 1) {
+                const context = actionInfo.context || uuid;
+                const json = {
+                    event: 'getSettings',
+                    context: context
+                };
+                console.log('[PI] Requesting settings...');
+                websocket.send(JSON.stringify(json));
+            }
+        }
+        
+        function requestGlobalSettings() {
+            if (websocket && websocket.readyState === 1) {
+                const json = {
+                    event: 'getGlobalSettings',
+                    context: uuid
+                };
+                console.log('[PI] Requesting global settings...');
+                websocket.send(JSON.stringify(json));
+            }
+        }
+        
+        function updateUI(settings) {
+            console.log('[PI] Updating UI...');
+            
+            document.getElementById('userId').value = settings.userId || '';
+            document.getElementById('apiKey').value = settings.apiKey || '';
+            document.getElementById('timezone').value = settings.timezone || 'Europe/Madrid';
+            document.getElementById('workType').value = settings.workType || 'work';
+        }
+        
+        function getSettings() {
+            return {
+                userId: document.getElementById('userId').value.trim(),
+                apiKey: document.getElementById('apiKey').value.trim(),
+                timezone: document.getElementById('timezone').value,
+                workType: document.getElementById('workType').value
+            };
+        }
+        
+        function saveSettings() {
+            const settings = getSettings();
+            
+            console.log('[PI] ========================================');
+            console.log('[PI] SAVE BUTTON CLICKED');
+            console.log('[PI] ========================================');
+            
+            if (!settings.userId || !settings.apiKey) {
+                console.error('[PI] Missing credentials');
+                showStatus('⚠️ Please enter both User ID and API Key', 'error');
+                alert('⚠️ MISSING CREDENTIALS\n\nPlease enter both User ID and API Key before saving.');
+                return;
+            }
+            
+            console.log('[PI] Saving settings...');
+            
+            if (websocket && websocket.readyState === 1) {
+                // Save to current action
+                const context = actionInfo.context || uuid;
+                websocket.send(JSON.stringify({
+                    event: 'setSettings',
+                    context: context,
+                    payload: settings
+                }));
+                
+                // Save globally (for all actions)
+                websocket.send(JSON.stringify({
+                    event: 'setGlobalSettings',
+                    context: uuid,
+                    payload: settings
+                }));
+                
+                console.log('[PI] ✅ Settings saved successfully');
+                showStatus('✅ Settings saved successfully!', 'success');
+                alert('✅ SUCCESS\n\nSettings saved!\n\nAll 4 action buttons (Clock In, Clock Out, Status, Pause) will now use these credentials.\n\nYou can close this window and start using the buttons.');
+            } else {
+                console.error('[PI] WebSocket not connected');
+                showStatus('❌ Connection error. Please restart StreamDeck.', 'error');
+                alert('❌ CONNECTION ERROR\n\nPlease restart StreamDeck and try again.');
+            }
+        }
+        
+        async function testCredentials() {
+            const settings = getSettings();
+            
+            console.log('[PI] ========================================');
+            console.log('[PI] TEST BUTTON CLICKED');
+            console.log('[PI] User ID:', settings.userId || 'EMPTY');
+            console.log('[PI] API Key:', settings.apiKey ? 'PROVIDED' : 'EMPTY');
+            console.log('[PI] ========================================');
+            
+            if (!settings.userId || !settings.apiKey) {
+                console.error('[PI] Missing credentials');
+                showStatus('⚠️ Please enter both User ID and API Key', 'error');
+                alert('Please enter both User ID and API Key before testing');
+                return;
+            }
+            
+            showStatus('🔄 Testing credentials, please wait...', 'info');
+            document.getElementById('testBtn').disabled = true;
+            document.getElementById('testBtn').textContent = 'Testing...';
+            
+            try {
+                if (websocket && websocket.readyState === 1) {
+                    console.log('[PI] Sending test request to plugin...');
+                    
+                    const message = {
+                        event: 'sendToPlugin',
+                        context: actionInfo.context || uuid,
+                        action: actionInfo.action,
+                        payload: {
+                            action: 'testCredentials',
+                            userId: settings.userId,
+                            apiKey: settings.apiKey,
+                            timezone: settings.timezone
+                        }
+                    };
+                    
+                    console.log('[PI] ═══════════════════════════════════════════');
+                    console.log('[PI] SENDING MESSAGE TO PLUGIN');
+                    console.log('[PI] actionInfo:', actionInfo);
+                    console.log('[PI] uuid:', uuid);
+                    console.log('[PI] context being used:', actionInfo.context || uuid);
+                    console.log('[PI] action being used:', actionInfo.action);
+                    console.log('[PI] Full message:', JSON.stringify(message, null, 2));
+                    console.log('[PI] ═══════════════════════════════════════════');
+                    websocket.send(JSON.stringify(message));
+                    
+                    console.log('[PI] Test request sent, waiting for response...');
+                    
+                    // Timeout after 20 seconds (increased from 10)
+                    setTimeout(() => {
+                        if (document.getElementById('testBtn').disabled) {
+                            console.error('[PI] ❌ Test timeout after 20 seconds');
+                            showStatus('❌ Test timeout. Plugin may not have network access.', 'error');
+                            alert('❌ TEST TIMEOUT\n\nThe test took too long.\n\nPossible causes:\n1. StreamDeck needs to be restarted\n2. Plugin lacks network permissions\n3. No internet connection\n\nSolution:\n1. Close StreamDeck completely\n2. Run: killall "Stream Deck"\n3. Reopen StreamDeck\n4. Try again');
+                            document.getElementById('testBtn').disabled = false;
+                            document.getElementById('testBtn').textContent = 'Test Credentials';
+                        }
+                    }, 20000);
+                } else {
+                    console.error('[PI] WebSocket not connected');
+                    showStatus('✗ Connection error. Please restart StreamDeck.', 'error');
+                    alert('Connection error. Please restart StreamDeck.');
+                    document.getElementById('testBtn').disabled = false;
+                    document.getElementById('testBtn').textContent = 'Test Credentials';
+                }
+            } catch (error) {
+                console.error('[PI] Test error:', error);
+                showStatus('✗ Error: ' + error.message, 'error');
+                alert('Test error: ' + error.message);
+                document.getElementById('testBtn').disabled = false;
+                document.getElementById('testBtn').textContent = 'Test Credentials';
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message status-' + type;
+            statusEl.style.display = 'block';
+            
+            // Auto-hide after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('testBtn').addEventListener('click', testCredentials);
+            document.getElementById('saveBtn').addEventListener('click', saveSettings);
+        });
+    </script>
+</body>
+</html>
