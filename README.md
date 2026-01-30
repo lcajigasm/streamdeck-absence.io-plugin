@@ -18,7 +18,7 @@ StreamDeck plugin to manage your absence.io time tracking directly from your Str
 
 ## 🚀 Quick Start
 
-1. **Install** the plugin from the [releases page]([https://github.com/lcajigasm/absence-streamdeck-plugin/releases](https://github.com/lcajigasm/absence-streamdeck-plugin/releases))
+1. **Install** the plugin from the [releases page](https://github.com/lcajigasm/streamdeck-absence.io-plugin/releases/)
 2. **Configure** your absence.io API credentials
 3. **Start tracking** your time with StreamDeck buttons
 
