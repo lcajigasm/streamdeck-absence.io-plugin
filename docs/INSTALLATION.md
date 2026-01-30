@@ -32,7 +32,7 @@ This is the easiest method for most users.
 #### Steps:
 
 1. **Download the Plugin**
-   - Go to the [releases page](https://github.com/yourusername/absence-streamdeck-plugin/releases)
+   - Go to the [releases page](https://github.com/lcajigasm/absence-streamdeck-plugin/releases)
    - Download the latest `com.cajigas.absence.streamDeckPlugin` file
 
 2. **Install the Plugin**
